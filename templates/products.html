@@ -1,0 +1,302 @@
+{% extends "layout.html" %}
+
+{% block title %}Products{% endblock %}
+{% block page_title %}Products{% endblock %}
+{% block page_sub %}Manage your products and inventory.{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn-primary" onclick="toggleModal('add-product-modal')">
+    <span class="btn-primary-glow" aria-hidden="true"></span>
+    <span class="btn-primary-inner"><i class="ti ti-plus"></i> Add Product</span>
+</button>
+{% endblock %}
+
+{% block content %}
+
+<!-- SEARCH -->
+<div class="card">
+    <form class="search-row" method="GET" action="{{ url_for('products') }}">
+        <div class="search-wrap">
+            <i class="ti ti-search"></i>
+            <input type="text" name="keyword" placeholder="Search products..." value="{{ keyword }}">
+        </div>
+        <select class="filter-select" name="filter_by">
+            <option value="name"     {% if filter_by == 'name' %}selected{% endif %}>Name</option>
+            <option value="category" {% if filter_by == 'category' %}selected{% endif %}>Category</option>
+            <option value="sku"      {% if filter_by == 'sku' %}selected{% endif %}>SKU</option>
+        </select>
+        <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <!-- TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td>
+                    <div class="thumb-wrap" onclick="openEditImage('{{ p[0] }}')" title="Click to change image">
+                        {% if p[5] %}
+                            <img src="{{ url_for('static', filename='product_images/' + p[5]) }}"
+                                 alt="{{ p[1] }}" class="product-thumb">
+                        {% else %}
+                            <div class="product-thumb-placeholder">
+                                <i class="ti ti-photo"></i>
+                            </div>
+                        {% endif %}
+                        <div class="thumb-overlay">
+                            <i class="ti ti-camera"></i>
+                        </div>
+                    </div>
+                </td>
+                <td class="muted">{{ p[0] }}</td>
+                <td><strong>{{ p[1] }}</strong></td>
+                <td class="muted">{{ p[2] }}</td>
+                <td>₹{{ "%.2f"|format(p[3]) }}</td>
+                <td>{{ p[4] }}</td>
+                <td>
+                    {% if p[4] == 0 %}
+                        <span class="badge out-of-stock">Out of Stock</span>
+                    {% elif p[4] <= 10 %}
+                        <span class="badge low-stock">Low Stock</span>
+                    {% else %}
+                        <span class="badge in-stock">In Stock</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="actions">
+                        <button class="act-btn" title="Update Stock"
+                            onclick="openUpdateStock('{{ p[0] }}', '{{ p[4] }}')">
+                            <i class="ti ti-stack-2"></i>
+                        </button>
+                        <button class="act-btn" title="Update Price"
+                            onclick="openUpdatePrice('{{ p[0] }}', '{{ p[3] }}')">
+                            <i class="ti ti-currency-rupee"></i>
+                        </button>
+                        <form method="POST" action="{{ url_for('delete_product') }}"
+                              onsubmit="return confirm('Delete this product?')">
+                            <input type="hidden" name="sku" value="{{ p[0] }}">
+                            <button type="submit" class="act-btn danger" title="Delete">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="empty">No products found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ADD PRODUCT MODAL -->
+<div class="modal-overlay" id="add-product-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add Product</h2>
+            <button class="modal-close" onclick="toggleModal('add-product-modal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('add_product') }}" enctype="multipart/form-data">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SKU</label>
+                        <input type="number" name="sku" placeholder="e.g. 1001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" name="name" placeholder="Product name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" name="category" placeholder="e.g. Electronics" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (₹)</label>
+                        <input type="number" step="0.01" name="price" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock</label>
+                        <input type="number" name="stock" placeholder="0" required>
+                    </div>
+                </div>
+                <div class="form-group form-group-mt">
+                    <label>Product Image <span class="muted" style="font-weight:400;">(optional)</span></label>
+                    <div class="image-upload-box" id="add-upload-box"
+                         onclick="document.getElementById('add-image-input').click()">
+                        <img id="add-image-preview" class="image-preview" src="" alt="">
+                        <div id="add-upload-placeholder" class="upload-placeholder">
+                            <i class="ti ti-upload"></i>
+                            <p>Click to upload image</p>
+                            <p class="small">JPG, PNG, WEBP</p>
+                        </div>
+                    </div>
+                    <input type="file" id="add-image-input" name="image" accept="image/*"
+                           style="display:none;" onchange="previewImage(event, 'add')">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" onclick="toggleModal('add-product-modal')">Cancel</button>
+                <button type="submit" class="btn-primary"><span class="btn-primary-glow" aria-hidden="true"></span><span class="btn-primary-inner">Add Product</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- EDIT IMAGE MODAL -->
+<div class="modal-overlay" id="edit-image-modal">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h2>Change Product Image</h2>
+            <button class="modal-close" onclick="closeEditImage()">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('update_product_image') }}" enctype="multipart/form-data">
+            <div class="modal-body">
+                <input type="hidden" name="sku" id="edit-image-sku">
+                <div class="image-upload-box tall" id="edit-upload-box"
+                     onclick="document.getElementById('edit-image-input').click()">
+                    <img id="edit-image-preview" class="image-preview" src="" alt="">
+                    <div id="edit-upload-placeholder" class="upload-placeholder">
+                        <i class="ti ti-upload"></i>
+                        <p>Click to select new image</p>
+                        <p class="small">JPG, PNG, WEBP</p>
+                    </div>
+                </div>
+                <input type="file" id="edit-image-input" name="image" accept="image/*"
+                       style="display:none;" onchange="previewImage(event, 'edit')" required>
+                <p class="upload-hint">This will replace the current product image.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" onclick="closeEditImage()">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <span class="btn-primary-glow" aria-hidden="true"></span>
+                    <span class="btn-primary-inner"><i class="ti ti-check"></i> Save Image</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- UPDATE STOCK MODAL -->
+<div class="modal-overlay" id="update-stock-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Update Stock</h2>
+            <button class="modal-close" onclick="toggleModal('update-stock-modal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('update_stock') }}">
+            <div class="modal-body">
+                <input type="hidden" name="sku" id="stock-sku">
+                <div class="form-group">
+                    <label>New Stock Quantity</label>
+                    <input type="number" name="new_stock" id="stock-val" placeholder="0" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" onclick="toggleModal('update-stock-modal')">Cancel</button>
+                <button type="submit" class="btn-primary"><span class="btn-primary-glow" aria-hidden="true"></span><span class="btn-primary-inner">Update Stock</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- UPDATE PRICE MODAL -->
+<div class="modal-overlay" id="update-price-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Update Price</h2>
+            <button class="modal-close" onclick="toggleModal('update-price-modal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('update_price') }}">
+            <div class="modal-body">
+                <input type="hidden" name="sku" id="price-sku">
+                <div class="form-group">
+                    <label>New Price (₹)</label>
+                    <input type="number" step="0.01" name="new_price" id="price-val" placeholder="0.00" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" onclick="toggleModal('update-price-modal')">Cancel</button>
+                <button type="submit" class="btn-primary"><span class="btn-primary-glow" aria-hidden="true"></span><span class="btn-primary-inner">Update Price</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+function toggleModal(id) {
+    document.getElementById(id).classList.toggle('active');
+}
+function openUpdateStock(sku, stock) {
+    document.getElementById('stock-sku').value = sku;
+    document.getElementById('stock-val').value = stock;
+    toggleModal('update-stock-modal');
+}
+function openUpdatePrice(sku, price) {
+    document.getElementById('price-sku').value = sku;
+    document.getElementById('price-val').value = price;
+    toggleModal('update-price-modal');
+}
+
+function openEditImage(sku) {
+    // Reset modal to blank state every time it opens
+    const preview     = document.getElementById('edit-image-preview');
+    const placeholder = document.getElementById('edit-upload-placeholder');
+    const fileInput   = document.getElementById('edit-image-input');
+    preview.style.display   = 'none';
+    preview.src             = '';
+    placeholder.style.display = 'flex';
+    fileInput.value         = '';
+
+    document.getElementById('edit-image-sku').value = sku;
+    document.getElementById('edit-image-modal').classList.add('active');
+}
+function closeEditImage() {
+    document.getElementById('edit-image-modal').classList.remove('active');
+}
+
+function previewImage(event, context) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const preview     = document.getElementById(context + '-image-preview');
+    const placeholder = document.getElementById(context + '-upload-placeholder');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.src           = e.target.result;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+
+{% endblock %}

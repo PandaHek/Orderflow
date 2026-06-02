@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block page_sub %}Analytics and business insights{% endblock %}
+
+{% block content %}
+
+<!-- SUMMARY STATS -->
+<div class="reports-grid">
+    <div class="report-stat">
+        <div class="rs-icon purple"><i class="ti ti-clipboard-list"></i></div>
+        <div class="rs-label">Total Orders</div>
+        <div class="rs-val">{{ total_orders }}</div>
+    </div>
+    <div class="report-stat">
+        <div class="rs-icon green"><i class="ti ti-currency-rupee"></i></div>
+        <div class="rs-label">Total Revenue</div>
+        <div class="rs-val">₹{{ "%.2f"|format(revenue) }}</div>
+    </div>
+    <div class="report-stat">
+        <div class="rs-icon red"><i class="ti ti-x"></i></div>
+        <div class="rs-label">Cancelled Orders</div>
+        <div class="rs-val">{{ cancelled }}</div>
+    </div>
+</div>
+
+<!-- TABLES -->
+<div class="reports-tables">
+
+    <!-- TOP PRODUCTS -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Top Selling Products</h2>
+        </div>
+        {% if top_products %}
+            {% set max_sold = top_products[0][1] %}
+            {% for p in top_products %}
+            <div class="report-progress-row">
+                <div class="report-progress-head">
+                    <span class="report-progress-name">{{ p[0] }}</span>
+                    <span class="report-progress-units">{{ p[1] }} units</span>
+                </div>
+                <div class="progress-wrap">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ (p[1] / max_sold * 100)|int }}%"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">No sales data yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- ORDERS BY CITY -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Orders by City</h2>
+        </div>
+        {% if city_orders %}
+            {% for row in city_orders %}
+            <div class="city-row">
+                <span class="city-name">{{ row[0] }}</span>
+                <span class="city-count">{{ row[1] }}</span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">No data yet.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

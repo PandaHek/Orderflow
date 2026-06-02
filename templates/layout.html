@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrderFlow — {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sb-logo">
+            <div class="sb-logo-icon"><i class="ti ti-database"></i></div>
+            OrderFlow
+        </div>
+
+        <p class="sb-section">Main</p>
+        <a href="{{ url_for('dashboard') }}" class="sb-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="ti ti-layout-dashboard"></i> Dashboard
+        </a>
+        <a href="{{ url_for('customers') }}" class="sb-item {% if request.endpoint == 'customers' %}active{% endif %}">
+            <i class="ti ti-users"></i> Customers
+        </a>
+        <a href="{{ url_for('products') }}" class="sb-item {% if request.endpoint == 'products' %}active{% endif %}">
+            <i class="ti ti-box"></i> Products
+        </a>
+        <a href="{{ url_for('orders') }}" class="sb-item {% if request.endpoint == 'orders' %}active{% endif %}">
+            <i class="ti ti-clipboard-list"></i> Orders
+        </a>
+
+        <p class="sb-section">System</p>
+        <a href="{{ url_for('reports') }}" class="sb-item {% if request.endpoint == 'reports' %}active{% endif %}">
+            <i class="ti ti-chart-bar"></i> Reports
+        </a>
+
+        <div class="sb-bottom">
+            <a href="{{ url_for('admin.index') }}" class="sb-admin-card" target="_blank" rel="noopener">
+                <div class="sb-admin-badge">
+                    <i class="ti ti-settings"></i>
+                </div>
+                <div class="sb-admin-text">
+                    <span class="sb-admin-title">Admin</span>
+                    <span class="sb-admin-sub">SQL Console</span>
+                </div>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="tb-left">
+                <h1>{% block page_title %}{% endblock %}</h1>
+                <p>{% block page_sub %}{% endblock %}</p>
+            </div>
+            <div class="tb-actions">
+                {% block topbar_actions %}{% endblock %}
+            </div>
+        </div>
+
+        <!-- PAGE CONTENT -->
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='filter-dropdown.js') }}"></script>
+</body>
+</html>

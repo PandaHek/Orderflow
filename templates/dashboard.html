@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Welcome back, Admin{% endblock %}
+
+{% block content %}
+
+<div class="stats">
+    <div class="stat">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-val">{{ total_orders }}</div>
+        <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Revenue</div>
+        <div class="stat-val">₹{{ "%.2f"|format(revenue) }}</div>
+        <div class="stat-sub">delivered orders</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Customers</div>
+        <div class="stat-val">{{ total_cust }}</div>
+        <div class="stat-sub">registered</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Cancelled</div>
+        <div class="stat-val">{{ cancelled }}</div>
+        <div class="stat-sub">orders</div>
+    </div>
+</div>
+
+<div class="dash-grid">
+
+    <div class="card">
+        <div class="card-header"><h2>Recent Orders</h2></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td class="muted">{{ order[0] }}</td>
+                    <td>{{ order[1] }}</td>
+                    <td><span class="badge {{ order[7]|lower|replace(' ', '-') }}">{{ order[7] }}</span></td>
+                    <td>₹{{ "%.2f"|format(order[8]) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="empty">No orders yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2>Top Selling Products</h2></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Units Sold</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in top_products %}
+                <tr>
+                    <td>{{ product[0] }}</td>
+                    <td><strong>{{ product[1] }}</strong></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="2" class="empty">No data yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="mb-3">SQL Console</h1>
+    <p class="text-muted">
+        Run custom SQL against <code>orderflow.db</code>. Use with care — writes affect live data
+        (including triggers such as stock updates on <code>order_items</code> inserts).
+    </p>
+
+    <form method="post" class="mb-4">
+        <div class="form-group">
+            <label for="sql"><strong>SQL query</strong></label>
+            <textarea
+                id="sql"
+                name="sql"
+                class="form-control font-monospace"
+                rows="8"
+                placeholder="SELECT * FROM products LIMIT 10;"
+                spellcheck="false">{{ sql }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Run query</button>
+    </form>
+
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if message %}
+    <div class="alert alert-success" role="alert">{{ message }}</div>
+    {% endif %}
+
+    {% if columns %}
+    <h2 class="h5 mt-4">Results ({{ rows|length }} row{% if rows|length != 1 %}s{% endif %})</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm">
+            <thead class="thead-light">
+                <tr>
+                    {% for col in columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for col in columns %}
+                    <td>{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{{ columns|length }}" class="text-muted">No rows returned.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

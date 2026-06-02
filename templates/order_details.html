@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}Order {{ order_id }}{% endblock %}
+{% block page_title %}Order Details{% endblock %}
+{% block page_sub %}Viewing order #{{ order_id }}{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('orders') }}" class="back-link">
+    <i class="ti ti-arrow-left"></i> Back to Orders
+</a>
+
+<!-- ITEMS TABLE -->
+<div class="card">
+    <div class="card-header">
+        <h2>Items in Order #<span class="mono">{{ order_id }}</span></h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set total = namespace(val=0) %}
+            {% for item in items %}
+            {% set total.val = total.val + item[4] %}
+            <tr>
+                <td class="muted">{{ item[0] }}</td>
+                <td><strong>{{ item[1] }}</strong></td>
+                <td>{{ item[2] }}</td>
+                <td class="muted">₹{{ "%.2f"|format(item[3]) }}</td>
+                <td>₹{{ "%.2f"|format(item[4]) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="empty">No items in this order.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if items %}
+    <div class="order-total-row">
+        <span class="text-muted">Order Total</span>
+        <span>₹{{ "%.2f"|format(total.val) }}</span>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

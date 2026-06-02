@@ -1,0 +1,400 @@
+{% extends "layout.html" %}
+
+{% block title %}Customers{% endblock %}
+{% block page_title %}Customers{% endblock %}
+{% block page_sub %}Manage your customers{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn-primary" onclick="toggleModal('add-customer-modal')">
+    <span class="btn-primary-glow" aria-hidden="true"></span>
+    <span class="btn-primary-inner"><i class="ti ti-plus"></i> Add Customer</span>
+</button>
+{% endblock %}
+
+
+{% block content %}
+
+
+
+
+{% if request.args.get('msg') %}
+<div class="banner {{ request.args.get('msg_type') }}">
+    {{ request.args.get('msg') }}
+</div>
+{% endif %}
+
+
+<!-- SEARCH -->
+<div class="card">
+    <form class="search-row" method="GET" action="{{ url_for('customers') }}">
+        <div class="search-wrap">
+            <i class="ti ti-search"></i>
+            <input type="text" name="keyword" placeholder="Search customers..." value="{{ keyword }}">
+        </div>
+        <select class="filter-select" name="filter_by">
+            <option value="name"        {% if filter_by == 'name' %}selected{% endif %}>Name</option>
+            <option value="customer_id" {% if filter_by == 'customer_id' %}selected{% endif %}>Customer ID</option>
+        </select>
+        <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <!-- TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in customers %}
+            <tr>
+                <td class="muted">{{ c[0] }}</td>
+                <td>{{ c[1] }}</td>
+                <td class="muted">{{ c[2] }}</td>
+                <td class="muted">{{ c[3] }}</td>
+                <td>{{ c[5] }}</td>
+                <td class="muted">{{ c[6] }}</td>
+                <td>
+                    <div class="actions">
+                        <button class="act-btn" title="View Details" onclick="openViewModal(
+                            '{{ c[0] }}', '{{ c[1] }}', '{{ c[2] }}', '{{ c[3] }}',
+                            '{{ c[4] }}', '{{ c[5] }}', '{{ c[6] }}', '{{ c[7] }}', '{{ c[8] }}'
+                        )">
+                            <i class="ti ti-eye"></i>
+                        </button>
+                        <form method="POST" action="/customers/delete"
+                              onsubmit="return confirm('Delete this customer?')">
+                            <input type="hidden" name="customer_id" value="{{ c[0] }}">
+                            <button type="submit" class="act-btn danger" title="Delete">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="empty">No customers found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<!-- VIEW / EDIT CUSTOMER MODAL -->
+<div class="modal-overlay" id="view-customer-modal">
+    <div class="modal">
+
+        <!-- VIEW MODE -->
+        <div id="vc-view-mode">
+            <div class="modal-header">
+                <h2>Customer Details</h2>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button class="modal-close" onclick="toggleModal('view-customer-modal')">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:4px;">
+                    <div class="vc-label">Customer ID</div>
+                    <div class="vc-id-pill">
+                        <span id="vc-customer-id" class="mono"></span>
+                        <button class="copy-btn" onclick="copyText('vc-customer-id', this)" title="Copy">
+                            <i class="ti ti-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="vc-section">Personal Information</div>
+                <div class="form-row">
+                    <div class="vc-field">
+                        <div class="vc-label">Name</div>
+                        <div class="vc-val" id="vc-name"></div>
+                    </div>
+                    <div class="vc-field">
+                        <div class="vc-label">Email</div>
+                        <div class="vc-val" id="vc-email"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="vc-field">
+                        <div class="vc-label">Phone</div>
+                        <div class="vc-val" id="vc-phone"></div>
+                    </div>
+                </div>
+                <div class="vc-section">Address</div>
+                <div class="vc-field" style="margin-bottom:10px;">
+                    <div class="vc-label">Street</div>
+                    <div class="vc-val" id="vc-street"></div>
+                </div>
+                <div class="form-row">
+                    <div class="vc-field">
+                        <div class="vc-label">City</div>
+                        <div class="vc-val" id="vc-city"></div>
+                    </div>
+                    <div class="vc-field">
+                        <div class="vc-label">State</div>
+                        <div class="vc-val" id="vc-state"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="vc-field">
+                        <div class="vc-label">Pincode</div>
+                        <div class="vc-val" id="vc-pincode"></div>
+                    </div>
+                    <div class="vc-field">
+                        <div class="vc-label">Country</div>
+                        <div class="vc-val" id="vc-country"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="toggleModal('view-customer-modal')">Close</button>
+                <button class="btn-primary" onclick="switchToEdit()">
+                    <span class="btn-primary-glow" aria-hidden="true"></span>
+                    <span class="btn-primary-inner"><i class="ti ti-pencil"></i> Edit</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div id="vc-edit-mode" style="display:none;">
+            <div class="modal-header">
+                <h2>Edit Customer</h2>
+                <button class="modal-close" onclick="toggleModal('view-customer-modal')">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+            <form method="POST" action="/customers/update">
+                <input type="hidden" name="customer_id" id="edit-customer-id">
+                <div class="modal-body">
+                    <div class="vc-section">Personal Information</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name <span style="color:var(--text-muted);font-size:11px;">(read-only)</span></label>
+                            <input type="text" id="edit-name-display" disabled
+                                style="opacity:.5;cursor:not-allowed;">
+                        </div>
+                        <div class="form-group">
+                            <label>Email <span style="color:var(--text-muted);font-size:11px;">(read-only)</span></label>
+                            <input type="text" id="edit-email-display" disabled
+                                style="opacity:.5;cursor:not-allowed;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone" id="edit-phone" required>
+                        </div>
+                    </div>
+                    <div class="vc-section">Address</div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>Street</label>
+                        <input type="text" name="street" id="edit-street" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="city" id="edit-city" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="state" id="edit-state" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Pincode</label>
+                            <input type="text" name="pincode" id="edit-pincode" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="country" id="edit-country" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-outline" onclick="switchToView()">Cancel</button>
+                    <button type="submit" class="btn-primary"><span class="btn-primary-glow" aria-hidden="true"></span><span class="btn-primary-inner">Save Changes</span></button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="add-customer-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add Customer</h2>
+            <button class="modal-close" onclick="toggleModal('add-customer-modal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('add_customer') }}">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" placeholder="Full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="Email address" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" placeholder="Phone number" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Street</label>
+                        <input type="text" name="street" placeholder="Street address" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" name="city" placeholder="City" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" name="state" placeholder="State" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pincode</label>
+                        <input type="text" name="pincode" placeholder="Pincode" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" name="country" placeholder="Country" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" onclick="toggleModal('add-customer-modal')">Cancel</button>
+                <button type="submit" class="btn-primary"><span class="btn-primary-glow" aria-hidden="true"></span><span class="btn-primary-inner">Add Customer</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+
+
+
+const customers = [
+    {% for c in all_customers %}
+    { id: "{{ c[0] }}", name: "{{ c[1] }}", city: "{{ c[5] }}" },
+    {% endfor %}
+];
+
+function filterCustomers(query) {
+    document.getElementById('place-order-btn').disabled = true;
+    const dropdown = document.getElementById('customer-dropdown');
+    if (!query) { dropdown.style.display = 'none'; return; }
+    
+    const matches = customers.filter(c => 
+        c.name.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    if (matches.length === 0) { dropdown.style.display = 'none'; return; }
+    
+    dropdown.innerHTML = matches.map(c => `
+        <div onclick="selectCustomer('${c.id}', '${c.name}', '${c.city}')"
+             style="padding:8px 12px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
+             onmouseover="this.style.background='#1e1e1e'"
+             onmouseout="this.style.background='transparent'">
+            <div style="color:var(--text-primary); font-weight:500">${c.name}</div>
+            <div style="color:var(--text-muted); font-size:11px">${c.city} · ${c.id}</div>
+        </div>
+    `).join('');
+    
+    dropdown.style.display = 'block';
+}
+
+
+function selectCustomer(id, name, city) {
+    document.getElementById('customer-search').value = name;
+    document.getElementById('selected-customer-id').value = id;
+    document.getElementById('customer-dropdown').style.display = 'none';
+    document.getElementById('selected-customer-label').textContent = `✓ ${name} · ${city} · ID: ${id}`;
+    document.getElementById('place-order-btn').disabled = false;
+}
+
+
+
+
+
+if (window.location.search.includes('msg')) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+function toggleModal(id) {
+    document.getElementById(id).classList.toggle('active');
+    // always reset to view mode on close
+    switchToView();
+}
+
+function openViewModal(customerId, name, email, phone, street, city, state, pincode, country) {
+    document.getElementById('vc-customer-id').textContent = customerId;
+    document.getElementById('vc-name').textContent        = name;
+    document.getElementById('vc-email').textContent       = email;
+    document.getElementById('vc-phone').textContent       = phone;
+    document.getElementById('vc-street').textContent      = street;
+    document.getElementById('vc-city').textContent        = city;
+    document.getElementById('vc-state').textContent       = state;
+    document.getElementById('vc-pincode').textContent     = pincode;
+    document.getElementById('vc-country').textContent     = country;
+    switchToView();
+    document.getElementById('view-customer-modal').classList.add('active');
+}
+
+function switchToEdit() {
+    // pre-fill edit form from view values
+    document.getElementById('edit-customer-id').value    = document.getElementById('vc-customer-id').textContent;
+    document.getElementById('edit-name-display').value   = document.getElementById('vc-name').textContent;
+    document.getElementById('edit-email-display').value  = document.getElementById('vc-email').textContent;
+    document.getElementById('edit-phone').value          = document.getElementById('vc-phone').textContent;
+    document.getElementById('edit-street').value         = document.getElementById('vc-street').textContent;
+    document.getElementById('edit-city').value           = document.getElementById('vc-city').textContent;
+    document.getElementById('edit-state').value          = document.getElementById('vc-state').textContent;
+    document.getElementById('edit-pincode').value        = document.getElementById('vc-pincode').textContent;
+    document.getElementById('edit-country').value        = document.getElementById('vc-country').textContent;
+    document.getElementById('vc-view-mode').style.display = 'none';
+    document.getElementById('vc-edit-mode').style.display = 'block';
+}
+
+function switchToView() {
+    document.getElementById('vc-view-mode').style.display = 'block';
+    document.getElementById('vc-edit-mode').style.display = 'none';
+}
+
+function copyText(elementId, btn) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="ti ti-check"></i>';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = '<i class="ti ti-copy"></i>';
+        }, 1500);
+    });
+}
+</script>
+
+{% endblock %}

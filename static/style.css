@@ -1628,3 +1628,65 @@ td strong { font-weight: 600; }
   .reports-tables { grid-template-columns: 1fr; }
   .reports-grid { grid-template-columns: 1fr; }
 }
+
+/* ── MOBILE: ask users to open on desktop ─────────────────── */
+.mobile-only-notice {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only-notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    padding: 28px 22px;
+    background-color: var(--bg-base);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .mobile-only-notice__card {
+    max-width: 340px;
+    text-align: center;
+    padding: 32px 24px;
+    background: rgba(18, 18, 18, 0.9);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  .mobile-only-notice__icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: var(--text-primary);
+  }
+
+  .mobile-only-notice__card h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+
+  .mobile-only-notice__card p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  .app {
+    display: none !important;
+  }
+}

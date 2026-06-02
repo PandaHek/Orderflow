@@ -260,9 +260,17 @@ function addItemRow() {
 function toggleModal(id) {
     const modal = document.getElementById(id);
     modal.classList.toggle('active');
-    if (id === 'place-order-modal' && modal.classList.contains('active')) {
-        document.getElementById('items-container').innerHTML = '';
-        addItemRow();
+    if (id === 'place-order-modal') {
+        if (modal.classList.contains('active')) {
+            // opening — reset everything
+            document.getElementById('customer-search').value = '';
+            document.getElementById('selected-customer-id').value = '';
+            document.getElementById('selected-customer-label').textContent = '';
+            document.getElementById('customer-dropdown').style.display = 'none';
+            document.getElementById('items-container').innerHTML = '';
+            document.getElementById('place-order-btn').disabled = true;
+            addItemRow();
+        }
     }
 }
 

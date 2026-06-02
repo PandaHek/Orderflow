@@ -190,6 +190,12 @@ table { width: 100%; border-collapse: collapse; }
   color: var(--text-primary);
   padding: 2px 10px 24px;
   letter-spacing: -0.03em;
+  border-radius: var(--radius);
+  transition: opacity var(--hover-transition);
+}
+
+.sb-logo:hover {
+  opacity: 0.85;
 }
 
 .sb-logo-icon {

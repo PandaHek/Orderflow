@@ -13,10 +13,10 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <div class="sb-logo">
+        <a href="{{ url_for('dashboard') }}" class="sb-logo">
             <div class="sb-logo-icon"><i class="ti ti-database"></i></div>
             OrderFlow
-        </div>
+        </a>
 
         <p class="sb-section">Main</p>
         <a href="{{ url_for('dashboard') }}" class="sb-item {% if request.endpoint == 'dashboard' %}active{% endif %}">

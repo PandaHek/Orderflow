@@ -16,6 +16,7 @@
 <!-- SEARCH -->
 <div class="card">
     <form class="search-row" method="GET" action="{{ url_for('products') }}">
+        <span class="table-count">{{ products|length }} products</span>
         <div class="search-wrap">
             <i class="ti ti-search"></i>
             <input type="text" name="keyword" placeholder="Search products..." value="{{ keyword }}">

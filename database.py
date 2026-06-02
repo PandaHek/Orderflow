@@ -280,52 +280,46 @@ def place_order(customer_id, address_id, items):
     conn = get_connection()
     order_id = str(uuid.uuid4())[:4]
     total = 0
-
-    conn.execute("""
-        INSERT INTO orders (ORDER_ID, CUSTOMER_ID, ADDRESS_ID, STATUS, TOTAL_PRICE, ORDER_DATE)
-        VALUES (?, ?, ?, 'Created', 0, DATE('now'))
-    """, (order_id, customer_id, address_id))
+    valid_items = []
 
     for item in items:
         sku      = item['sku']
         quantity = item['quantity']
-
+        print(f"DEBUG: trying SKU={sku} qty={quantity}")
         cursor = conn.execute("SELECT PRICE, STOCK FROM products WHERE SKU = ?", (sku,))
         row = cursor.fetchone()
-
-        if row is None:
-            print(f"SKU {sku} not found, skipping.")
+        print(f"DEBUG: row={row}")
+        if row is None or row[1] < quantity:
             continue
+        valid_items.append({
+            'sku': sku,
+            'quantity': quantity,
+            'unit_price': row[0],
+            'subtotal': row[0] * quantity
+        })
+        total += row[0] * quantity
 
-        if row[1] < quantity:
-            print(f"Not enough stock for SKU {sku} (available: {row[1]}), skipping.")
-            continue
+    if not valid_items:
+        conn.close()
+        return None
 
-        unit_price = row[0]
-        subtotal   = unit_price * quantity
-        total     += subtotal
-        item_id    = str(uuid.uuid4())[:4]
+    conn.execute("""
+        INSERT INTO orders (ORDER_ID, CUSTOMER_ID, ADDRESS_ID, STATUS, TOTAL_PRICE, ORDER_DATE)
+        VALUES (?, ?, ?, 'Created', ?, DATE('now'))
+    """, (order_id, customer_id, address_id, total))
+    print(f"DEBUG: order inserted {order_id} total={total}")
 
+    for item in valid_items:
+        item_id = str(uuid.uuid4())[:4]
         conn.execute("""
             INSERT INTO order_items (ITEM_ID, ORDER_ID, SKU, QUANTITY, UNIT_PRICE, SUBTOTAL)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (item_id, order_id, sku, quantity, unit_price, subtotal))
-
-        # ✅ FIX 2 — Removed manual stock update, trigger handles it now
-        # conn.execute("""
-        #     UPDATE products SET STOCK = STOCK - ? WHERE SKU = ?
-        # """, (quantity, sku))
-
-    conn.execute("""
-        UPDATE orders SET TOTAL_PRICE = ? WHERE ORDER_ID = ?
-    """, (total, order_id))
+        """, (item_id, order_id, item['sku'], item['quantity'], item['unit_price'], item['subtotal']))
 
     conn.commit()
+    print(f"DEBUG: committed")
     conn.close()
-    print(f"Order placed! ID: {order_id} | Total: ₹{total}")
     return order_id
-
-
 
 
 def get_all_orders():
@@ -334,7 +328,7 @@ def get_all_orders():
         SELECT o.ORDER_ID, c.NAME, a.STREET, a.CITY, a.STATE, a.PINCODE, a.COUNTRY, o.STATUS, o.TOTAL_PRICE, o.ORDER_DATE
         FROM orders o JOIN customers c ON o.CUSTOMER_ID = c.CUSTOMER_ID
         JOIN address a ON o.ADDRESS_ID = a.ADDRESS_ID
-        ORDER BY o.ORDER_DATE DESC
+        ORDER BY o.ORDER_DATE DESC, o.rowid DESC
     """)
     orders = cursor.fetchall()
     conn.close()

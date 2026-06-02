@@ -132,9 +132,15 @@ def orders():
         data = database.search_orders(keyword, filter_by)
     else:
         data = database.get_all_orders()
+    print(f"DEBUG: orders count = {len(data)}")
+    print(f"DEBUG: first few = {data[:3]}")
     all_customers = database.get_all_customers()
+    all_products  = database.get_all_products()
     return render_template("orders.html", orders=data, keyword=keyword,
-                           filter_by=filter_by, all_customers=all_customers)
+                           filter_by=filter_by, all_customers=all_customers,
+                           all_products=all_products)
+
+
 
 
 

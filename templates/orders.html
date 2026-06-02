@@ -16,6 +16,7 @@
 <!-- SEARCH -->
 <div class="card">
     <form class="search-row" method="GET" action="{{ url_for('orders') }}">
+        <span class="table-count">{{ orders|length }} orders</span>
         <div class="search-wrap">
             <i class="ti ti-search"></i>
             <input type="text" name="keyword" placeholder="Search orders..." value="{{ keyword }}">
@@ -80,7 +81,7 @@
                 <i class="ti ti-x"></i>
             </button>
         </div>
-        <form method="POST" action="{{ url_for('place_order') }}">
+        <form method="POST" action="{{ url_for('place_order') }}" onsubmit="return validateOrder()">
             <div class="modal-body">
 
                 <!-- CUSTOMER SEARCH -->
@@ -96,18 +97,14 @@
                 <!-- ITEMS -->
                 <div class="modal-divider">
                     <div class="item-row-header">
-                        <span>SKU</span>
+                        <span>Product</span>
                         <span>Qty</span>
                         <span></span>
                     </div>
                     <div id="items-container">
-                        <div class="item-row">
-                            <input type="number" name="sku" placeholder="SKU" required>
-                            <input type="number" name="quantity" placeholder="Qty" min="1" required>
-                            <span></span>
-                        </div>
+                        <!-- rows added dynamically -->
                     </div>
-                    <button type="button" class="add-item-btn" onclick="addItem()">
+                    <button type="button" class="add-item-btn" onclick="addItemRow()">
                         <i class="ti ti-plus"></i> Add Item
                     </button>
                 </div>
@@ -154,19 +151,22 @@
 
 
 <script>
-// customer list from Flask
 const customers = [
     {% for c in all_customers %}
     { id: "{{ c[0] }}", name: "{{ c[1] }}", city: "{{ c[5] }}" },
     {% endfor %}
 ];
 
+const products = [
+    {% for p in all_products %}
+    { sku: {{ p[0] }}, name: "{{ p[1] }}", category: "{{ p[2] }}", price: {{ p[3] }}, stock: {{ p[4] }} },
+    {% endfor %}
+];
 
 function filterCustomers(query) {
     document.getElementById('selected-customer-id').value = '';
     document.getElementById('selected-customer-label').textContent = '';
-    document.getElementById('place-order-btn').disabled = true;  // disable when typing
-
+    document.getElementById('place-order-btn').disabled = true;
     const dropdown = document.getElementById('customer-dropdown');
     if (!query) { dropdown.style.display = 'none'; return; }
     const matches = customers.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
@@ -180,6 +180,16 @@ function filterCustomers(query) {
     dropdown.style.display = 'block';
 }
 
+function validateOrder() {
+    const skus = document.querySelectorAll('#items-container input[name="sku"]');
+    for (const sku of skus) {
+        if (!sku.value) {
+            alert('Please select a product from the dropdown for all items.');
+            return false;
+        }
+    }
+    return true;
+}
 
 
 function selectCustomer(id, name, city) {
@@ -187,16 +197,73 @@ function selectCustomer(id, name, city) {
     document.getElementById('selected-customer-id').value = id;
     document.getElementById('customer-dropdown').style.display = 'none';
     document.getElementById('selected-customer-label').textContent = `✓ ${name} · ${city} · ID: ${id}`;
-    document.getElementById('place-order-btn').disabled = false;  // enable when selected
+    checkOrderReady();
+}
+
+function filterProducts(query, rowEl) {
+    const dropdown = rowEl.querySelector('.product-dropdown');
+    rowEl.querySelector('input[name="sku"]').value = '';
+    rowEl.querySelector('.product-hint').textContent = '';
+    checkOrderReady();
+    if (!query) { dropdown.style.display = 'none'; return; }
+    const matches = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
+    if (matches.length === 0) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(p => {
+        const outOfStock = p.stock === 0;
+        return `
+        <div class="dropdown-item ${outOfStock ? 'disabled' : ''}"
+             ${!outOfStock ? `onclick="selectProduct(${p.sku}, '${p.name}', ${p.stock}, this.closest('.item-row'))"` : ''}>
+            <div class="dropdown-item-title" style="${outOfStock ? 'color: var(--text-muted); text-decoration: line-through;' : ''}">${p.name}</div>
+            <div class="dropdown-item-sub">${p.category} · ₹${p.price} · Stock: ${outOfStock ? '<span style="color:#e05c5c;">Out of stock</span>' : p.stock}</div>
+        </div>`;
+    }).join('');
+    dropdown.style.display = 'block';
+}
+
+function selectProduct(sku, name, stock, rowEl) {
+    rowEl.querySelector('.product-search').value = name;
+    rowEl.querySelector('input[name="sku"]').value = sku;
+    rowEl.querySelector('input[name="quantity"]').max = stock;
+    rowEl.querySelector('.product-dropdown').style.display = 'none';
+    rowEl.querySelector('.product-hint').textContent = `✓ SKU: ${sku} · Stock: ${stock}`;
+    checkOrderReady();
+}
+
+function checkOrderReady() {
+    const customerId = document.getElementById('selected-customer-id').value;
+    const skus = document.querySelectorAll('#items-container input[name="sku"]');
+    const allSkusFilled = [...skus].every(s => s.value !== '');
+    document.getElementById('place-order-btn').disabled = !(customerId && allSkusFilled);
 }
 
 
 
-
-
+function addItemRow() {
+    const container = document.getElementById('items-container');
+    const isFirst = container.children.length === 0;
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+        <div style="flex:1;">
+            <input type="text" class="product-search" placeholder="Type product name..."
+                   autocomplete="off" oninput="filterProducts(this.value, this.closest('.item-row'))">
+            <div class="product-dropdown dropdown-panel"></div>
+            <input type="hidden" name="sku" required>
+            <div class="product-hint selected-hint"></div>
+        </div>
+        <input type="number" name="quantity" placeholder="Qty" min="1" required style="width:80px; align-self: start;">
+        ${!isFirst ? `<button type="button" class="remove-item" onclick="this.closest('.item-row').remove()"><i class="ti ti-x"></i></button>` : '<span></span>'}
+    `;
+    container.appendChild(row);
+}
 
 function toggleModal(id) {
-    document.getElementById(id).classList.toggle('active');
+    const modal = document.getElementById(id);
+    modal.classList.toggle('active');
+    if (id === 'place-order-modal' && modal.classList.contains('active')) {
+        document.getElementById('items-container').innerHTML = '';
+        addItemRow();
+    }
 }
 
 function openUpdateStatus(orderId, currentStatus) {
@@ -206,20 +273,6 @@ function openUpdateStatus(orderId, currentStatus) {
         opt.selected = opt.value === currentStatus;
     }
     toggleModal('update-status-modal');
-}
-
-function addItem() {
-    const container = document.getElementById('items-container');
-    const row = document.createElement('div');
-    row.className = 'item-row';
-    row.innerHTML = `
-        <input type="number" name="sku" placeholder="SKU" required>
-        <input type="number" name="quantity" placeholder="Qty" min="1" required>
-        <button type="button" class="remove-item" onclick="this.parentElement.remove()">
-            <i class="ti ti-x"></i>
-        </button>
-    `;
-    container.appendChild(row);
 }
 </script>
 

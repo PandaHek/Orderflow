@@ -13,15 +13,15 @@
         <div class="rs-label">Total Orders</div>
         <div class="rs-val">{{ total_orders }}</div>
     </div>
-    <div class="report-stat">
+    <div class="report-stat" style="background: radial-gradient(ellipse at bottom right, rgba(0,229,176,0.1) 0%, #0a0f0d 70%);">
         <div class="rs-icon green"><i class="ti ti-currency-rupee"></i></div>
         <div class="rs-label">Total Revenue</div>
-        <div class="rs-val">₹{{ "%.2f"|format(revenue) }}</div>
+        <div class="rs-val" style="color:#2dd4bf;">₹{{ "%.2f"|format(revenue) }}</div>
     </div>
-    <div class="report-stat">
+    <div class="report-stat" style="background: radial-gradient(ellipse at bottom right, rgba(239,68,68,0.1) 0%, #0f0a0a 70%);">
         <div class="rs-icon red"><i class="ti ti-x"></i></div>
         <div class="rs-label">Cancelled Orders</div>
-        <div class="rs-val">{{ cancelled }}</div>
+        <div class="rs-val" style="color:#f87171;">{{ cancelled }}</div>
     </div>
 </div>
 

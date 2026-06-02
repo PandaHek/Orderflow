@@ -27,6 +27,7 @@
 <!-- SEARCH -->
 <div class="card">
     <form class="search-row" method="GET" action="{{ url_for('customers') }}">
+        <span class="table-count">{{ customers|length }} customers</span>
         <div class="search-wrap">
             <i class="ti ti-search"></i>
             <input type="text" name="keyword" placeholder="Search customers..." value="{{ keyword }}">

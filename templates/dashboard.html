@@ -12,9 +12,9 @@
         <div class="stat-val">{{ total_orders }}</div>
         <div class="stat-sub">all time</div>
     </div>
-    <div class="stat">
+    <div class="stat" style="background: radial-gradient(ellipse at bottom right, rgba(0,229,176,0.1) 0%, #0a0f0d 70%);">
         <div class="stat-label">Revenue</div>
-        <div class="stat-val">₹{{ "%.2f"|format(revenue) }}</div>
+        <div class="stat-val" style="color:#2dd4bf;">₹{{ "%.2f"|format(revenue) }}</div>
         <div class="stat-sub">delivered orders</div>
     </div>
     <div class="stat">
@@ -22,9 +22,9 @@
         <div class="stat-val">{{ total_cust }}</div>
         <div class="stat-sub">registered</div>
     </div>
-    <div class="stat">
+    <div class="stat" style="background: radial-gradient(ellipse at bottom right, rgba(239,68,68,0.1) 0%, #0f0a0a 70%);">
         <div class="stat-label">Cancelled</div>
-        <div class="stat-val">{{ cancelled }}</div>
+        <div class="stat-val" style="color:#f87171;">{{ cancelled }}</div>
         <div class="stat-sub">orders</div>
     </div>
 </div>
